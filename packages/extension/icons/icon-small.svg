@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- 16/32px variant: the branch curves and the third text line turn to mush
+       at that size, so this keeps one branch merging into two heavy lines.
+       Same idea, fewer marks — legibility beats fidelity to the large mark. -->
+  <rect width="128" height="128" rx="24" fill="#1D4E6F"/>
+  <g stroke="#FAFAF9" stroke-width="11" fill="none" stroke-linecap="round">
+    <path d="M36 30v68"/>
+    <path d="M36 64h10a14 14 0 0 0 14-14"/>
+  </g>
+  <g fill="#FAFAF9">
+    <circle cx="36" cy="30" r="13"/>
+    <circle cx="36" cy="98" r="13"/>
+    <rect x="72" y="40" width="32" height="13" rx="6.5"/>
+    <rect x="72" y="75" width="21" height="13" rx="6.5"/>
+  </g>
+</svg>

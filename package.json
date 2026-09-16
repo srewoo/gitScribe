@@ -1,0 +1,21 @@
+{
+  "name": "gitscribe",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @gitscribe/core && npm run build -w @gitscribe/extension && tsc -p packages/mcp/tsconfig.json",
+    "test": "npm run test -w @gitscribe/core && npm run test -w @gitscribe/extension && npm run test:mcp",
+    "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p packages/extension/tsconfig.json && tsc -p packages/mcp/tsconfig.json --noEmit",
+    "test:mcp": "node scripts/mcp-contract-test.mjs",
+    "store:assets": "node store/build.mjs",
+    "package:chrome": "npm run build -w @gitscribe/extension && node scripts/package-extension.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.3",
+    "typescript": "^5.6.3"
+  },
+  "license": "MIT"
+}

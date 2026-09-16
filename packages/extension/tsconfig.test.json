@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./dist-test",
+    "rootDir": ".",
+    "types": [
+      "node",
+      "chrome"
+    ]
+  },
+  "include": [
+    "src/vwindow.ts",
+    "test/**/*.ts"
+  ]
+}

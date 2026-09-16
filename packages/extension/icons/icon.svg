@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- GitScribe mark: a repository's branches condensed into one document.
+       Ink blue #1D4E6F on paper #FAFAF9, the approved palette.
+       Left: a git graph — two side branches merging into the trunk.
+       Right: the digest they become, lines tapering to one condensed page.
+       Strokes are 7–9px at 128 so they survive rasterising to 32px. -->
+  <rect width="128" height="128" rx="28" fill="#1D4E6F"/>
+  <g stroke="#FAFAF9" stroke-width="7" fill="none" stroke-linecap="round">
+    <path d="M34 26v76"/>
+    <path d="M34 48h10a10 10 0 0 0 10-10"/>
+    <path d="M34 80h10a10 10 0 0 1 10 10"/>
+  </g>
+  <g fill="#FAFAF9">
+    <circle cx="34" cy="26" r="9"/>
+    <circle cx="34" cy="102" r="9"/>
+    <circle cx="57" cy="34" r="8"/>
+    <circle cx="57" cy="94" r="8"/>
+    <rect x="76" y="40" width="30" height="8" rx="4"/>
+    <rect x="76" y="60" width="26" height="8" rx="4"/>
+    <rect x="76" y="80" width="17" height="8" rx="4"/>
+  </g>
+</svg>

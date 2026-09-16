@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitScribe — Privacy Policy</title>
+<meta name="description" content="GitScribe's privacy policy: no server, no account, no analytics. What stays on your machine, and the one feature that sends code elsewhere.">
+<!-- Single self-contained page, so it can be served from GitHub Pages (/docs)
+     and pasted into the Chrome Web Store's privacy policy URL field.
+     TODO: replace OWNER in the contact link with the real GitHub org/user. -->
+<style>
+  :root{
+    --bg:#FAFAF9; --panel:#FFFFFF; --p2:#F7F6F4; --line:#E7E5E1; --line2:#D6D2CB;
+    --tx:#1F1F1D; --tx2:#4B4843; --tx3:#93908A;
+    --ac:#1D4E6F; --acl:#2F6FA8; --acw:#EAF1F7;
+    --warn:#8A6410; --warnw:#F8F1DF; --ok:#3F7D4E; --okw:#EBF2EC;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#1A1917; --panel:#211F1C; --p2:#282521; --line:#35312B; --line2:#4A453D;
+      --tx:#EDEAE4; --tx2:#A39D93; --tx3:#7A746A;
+      --ac:#7FB2D6; --acl:#9CC7E4; --acw:#1E2A33;
+      --warn:#C8993C; --warnw:#2A2317; --ok:#6FAE7C; --okw:#1D261F;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--tx);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px;margin:0 auto;padding:56px 16px 96px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:40px}
+  header svg{width:40px;height:40px;border-radius:9px;flex:none}
+  header b{font-size:19px;font-weight:600;letter-spacing:-.01em}
+  h1{font-size:34px;line-height:1.2;letter-spacing:-.02em;margin:0 0 8px;font-weight:600}
+  .date{color:var(--tx3);font-size:13px;margin:0 0 32px}
+  h2{font-size:19px;letter-spacing:-.01em;margin:40px 0 10px;font-weight:600}
+  h3{font-size:15px;margin:24px 0 6px;font-weight:600}
+  p,li{color:var(--tx2);font-size:15.5px}
+  ul{padding-left:20px}
+  li{margin:6px 0}
+  b,strong{color:var(--tx);font-weight:600}
+  a{color:var(--acl)}
+  a:hover{color:var(--ac)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+    background:var(--p2);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+  .lede{font-size:17.5px;color:var(--tx);border-left:3px solid var(--ac);
+    background:var(--acw);padding:14px 18px;border-radius:0 6px 6px 0}
+  .note{border-left:3px solid var(--warn);background:var(--warnw);
+    padding:14px 18px;border-radius:0 6px 6px 0;margin:18px 0}
+  .note p:last-child,.lede p:last-child{margin-bottom:0}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px 9px 0;
+    border-bottom:1px solid var(--line);color:var(--tx2)}
+  th{color:var(--tx);font-weight:600;font-size:13px;text-transform:uppercase;
+    letter-spacing:.06em}
+  footer{margin-top:56px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--tx3);font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <svg viewBox="0 0 128 128" role="img" aria-label="GitScribe">
+    <rect width="128" height="128" rx="28" fill="#1D4E6F"/>
+    <g stroke="#FAFAF9" stroke-width="7" fill="none" stroke-linecap="round">
+      <path d="M34 26v76"/><path d="M34 48h10a10 10 0 0 0 10-10"/>
+      <path d="M34 80h10a10 10 0 0 1 10 10"/>
+    </g>
+    <g fill="#FAFAF9">
+      <circle cx="34" cy="26" r="9"/><circle cx="34" cy="102" r="9"/>
+      <circle cx="57" cy="34" r="8"/><circle cx="57" cy="94" r="8"/>
+      <rect x="76" y="40" width="30" height="8" rx="4"/>
+      <rect x="76" y="60" width="26" height="8" rx="4"/>
+      <rect x="76" y="80" width="17" height="8" rx="4"/>
+    </g>
+  </svg>
+  <b>GitScribe</b>
+</header>
+
+<h1>Privacy Policy</h1>
+<p class="date">Last updated 16 September 2026 · applies to the GitScribe Chrome extension and the GitScribe MCP server</p>
+
+<div class="lede">
+  <p><b>There is no GitScribe server.</b> We operate no backend, no account
+  system and no analytics, so there is nothing of ours in the path to collect
+  anything with. Your settings stay in your browser profile. One feature —
+  generating a README — sends the code you selected to a model provider
+  <b>you</b> choose, and it is the only one that sends your code anywhere.</p>
+</div>
+
+<h2>What we collect</h2>
+<p><b>Nothing.</b> GitScribe has no telemetry, no crash reporting, no usage
+metrics, no advertising identifiers and no cookies. We do not see which
+repositories you open, what you select, or that you installed it at all. We do
+not sell or share data, because we never receive any.</p>
+
+<h2>What is stored, and where</h2>
+<p>Everything GitScribe saves lives in your own browser profile, through
+Chrome's <code>storage</code> API. It is readable only by this extension, is
+removed when you uninstall it, and is never uploaded.</p>
+
+<table>
+  <tr><th>Stored</th><th>Why</th></tr>
+  <tr><td>Forge access tokens (GitHub, GitLab)</td><td>Optional. Raises rate limits and reaches private repositories. Sent only to the forge the token belongs to, and never attached to any other URL.</td></tr>
+  <tr><td>Model provider API keys</td><td>Optional. Used for exact token counts and README generation. Sent only to that vendor.</td></tr>
+  <tr><td>Selections, exclusion presets, recent repositories</td><td>So a selection survives navigating around a repo. History is capped at 20 entries.</td></tr>
+  <tr><td>Model choice and theme</td><td>Preferences.</td></tr>
+</table>
+
+<p>Digests and generated READMEs are held in memory in the background worker
+and are lost when it restarts. Nothing is written to disk unless you press
+<b>Save as file</b>.</p>
+
+<h2>Where data goes on the network</h2>
+<p>GitScribe talks to these hosts, and no others:</p>
+<ul>
+  <li><code>api.github.com</code> and <code>codeload.github.com</code> — repository metadata, trees, files, pull requests. GitHub receives the request under its own privacy policy.</li>
+  <li><code>gitlab.com</code>, or the self-hosted GitLab host you configure — the same, for GitLab.</li>
+  <li><code>127.0.0.1</code> — only if you enable Ollama. This never leaves your machine.</li>
+  <li>The model provider you chose (Anthropic, Google, OpenAI or xAI) — only for exact token counts, or for README generation.</li>
+</ul>
+
+<div class="note">
+  <p><b>Generating a README sends your selected source code to the model
+  provider you picked.</b> Everything else in GitScribe keeps your code on your
+  machine; this feature cannot — the model has to read the code to describe it.
+  You are shown the file count and the estimated cost, and nothing is sent until
+  you confirm. Your code is then handled under <b>that provider's</b> privacy
+  policy and data-retention terms, not ours. If that is unacceptable, run the
+  analysis against a local Ollama model, which never leaves <code>127.0.0.1</code>,
+  or use the raw digest, which needs no model at all.</p>
+</div>
+
+<h2>Permissions, and what each is for</h2>
+<ul>
+  <li><code>storage</code> — the settings listed above.</li>
+  <li><code>sidePanel</code> — the entire interface is a side panel.</li>
+  <li><code>tabs</code> — reads the URL of the active tab, so the panel can tell which repository you are looking at. It is not used to build a browsing history, and no URL is transmitted anywhere. Chrome offers nothing narrower that works: under <code>activeTab</code>, <code>chrome.tabs.query()</code> returns <code>url: null</code>. Decline it and the extension still works — paste a repository URL instead.</li>
+  <li>Host access to the forges, model providers and Ollama is requested only when you enable that provider, never at install. A self-hosted GitLab host is requested as that exact origin, never a wildcard.</li>
+</ul>
+<p>GitScribe injects no content script into any page, and loads no remote code —
+everything that runs is inside the published package.</p>
+
+<h2>Secrets found in your code</h2>
+<p>Digests are scanned for credential-shaped strings, which are redacted before
+the output is assembled, and what was redacted is reported so the redaction is
+visible rather than silent. This is a safety net, not a guarantee: review a
+digest before pasting it somewhere public.</p>
+
+<h2>Children</h2>
+<p>GitScribe is a developer tool, is not directed at children, and collects no
+personal information from anyone.</p>
+
+<h2>Changes to this policy</h2>
+<p>Material changes will be published here with a new date, and — because the
+policy ships in the repository — visible in its git history.</p>
+
+<h2>Contact</h2>
+<p>Questions or a suspected privacy problem: open an issue at
+<a href="https://github.com/OWNER/gitscribe/issues">github.com/OWNER/gitscribe/issues</a>.</p>
+
+<footer>
+  GitScribe is open source under the MIT licence. The claims on this page are
+  checkable: read <code>packages/extension/PERMISSIONS.md</code> and the source.
+</footer>
+
+</div>
+</body>
+</html>

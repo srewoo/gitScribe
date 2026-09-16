@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GitScribe</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="hdr">
+    <div class="repo">
+      <span class="own hide" id="owner"></span><span class="nm" id="repo">GitScribe</span>
+      <span class="pill hide" id="ref"></span>
+      <span style="flex:1"></span>
+      <button class="icobtn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+          <circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11" /><path d="M8 3a5 5 0 0 1 0 10z" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+      <button class="icobtn" id="settingsBtn" title="Settings" aria-label="Settings">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+             stroke-width="1.4" stroke-linecap="round">
+          <path d="M2 4h5M10 4h4M2 8h9M13.5 8h.5M2 12h2M7 12h7"/>
+          <circle cx="8.5" cy="4" r="1.6" fill="currentColor" stroke="none"/>
+          <circle cx="12" cy="8" r="1.6" fill="currentColor" stroke="none"/>
+          <circle cx="5.5" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+    </div>
+    <div class="meta">
+      <span class="m" id="fileCount">No repository open</span>
+      <i class="dot hide" id="metaDot"></i>
+      <span class="m hide" id="rate"></span>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:9px">
+      <div class="seg" style="height:24px">
+        <button class="on" id="modeRepo" style="height:22px">Repository</button>
+        <button id="modeChanges" style="height:22px">Changes</button>
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-tab="files">Files</button>
+      <button class="tab" data-tab="budget">Budget</button>
+      <button class="tab" data-tab="output">Output</button>
+    </div>
+  </div>
+
+  <!-- empty / error -->
+  <div class="body hide" id="emptyPane">
+    <div class="err" id="emptyMsg"></div>
+    <div style="padding:0 14px 14px">
+      <div class="fld"><input id="urlInput" placeholder="github.com/owner/repo"></div>
+      <button class="btn pri" id="openBtn" style="width:100%;margin-top:9px">Open</button>
+    </div>
+  </div>
+
+  <!-- files -->
+  <div id="filesPane" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="bar">
+      <div class="fld">
+        <input id="filter" placeholder="Filter paths">
+        <span class="kbd">/</span>
+      </div>
+      <div class="chips" id="rules"></div>
+      <div id="ruleAdd" class="hide" style="display:flex;gap:6px;align-items:center">
+        <div class="seg" style="height:24px">
+          <button class="on" id="ruleModeEx" style="height:22px">exclude</button>
+          <button id="ruleModeIn" style="height:22px">include</button>
+        </div>
+        <div class="fld" style="flex:1;height:24px">
+          <input id="ruleInput" class="m" placeholder="**/*.test.ts" style="font-size:11px">
+        </div>
+        <button class="btn" id="ruleAddOk" style="height:24px">Add</button>
+      </div>
+      <div id="presetNameRow" class="hide" style="display:flex;gap:6px;align-items:center">
+        <div class="fld" style="flex:1;height:24px">
+          <input id="presetName" placeholder="Name this preset" style="font-size:11px">
+        </div>
+        <button class="btn" id="presetNameOk" style="height:24px">Save</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn" id="presetSave" style="height:22px;font-size:11px;padding:0 8px">Save preset</button>
+        <button class="btn" id="presetsBtn" style="height:22px;font-size:11px;padding:0 8px">Presets &amp; history</button>
+      </div>
+    </div>
+    <div id="treeWarn"></div>
+    <div id="treeStatus" role="status" aria-live="polite" class="srOnly"></div>
+    <div class="body" id="tree" style="flex:1;position:relative"></div>
+    <div class="ftr">
+      <div class="tot">
+        <div><b id="total">0</b> <span>tokens selected</span></div>
+        <span class="m" id="pct" style="font-size:11px"></span>
+      </div>
+      <div class="meter" id="meter"><i id="bar" style="width:0%"></i></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+        <span style="font-size:11px;color:var(--tx2)" id="selCount"></span>
+        <span style="flex:1"></span>
+        <button class="btn" id="genBtn">Raw digest</button>
+        <button class="btn pri" id="readmeBtn">Generate README</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- changes -->
+  <div class="hide" id="changesPane" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="bar">
+      <div class="fld">
+        <input id="diffSpec" placeholder="PR number, PR URL, or v1.0...main">
+        <span class="kbd">⌘⇧P</span>
+      </div>
+      <button class="btn pri" id="diffGo" style="width:100%">Load changes</button>
+      <div id="diffNote" class="note hide"></div>
+    </div>
+    <div class="body" id="diffList" style="flex:1"></div>
+    <div class="ftr">
+      <div class="tot">
+        <div><b id="diffTokens">0</b> <span>tokens</span></div>
+        <span class="m" id="diffStat" style="font-size:11px"></span>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:10px">
+        <button class="btn pri" id="diffCopy" style="flex:1">Copy</button>
+        <button class="btn" id="diffSave" style="height:32px">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- budget -->
+  <div class="body hide" id="budgetPane">
+    <div class="sec">
+      <div class="eyebrow" style="margin-bottom:9px">Target model</div>
+      <div id="models"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+        <span style="font-size:11px;color:var(--tx3);flex:1" id="ollamaMsg">Looking for Ollama…</span>
+        <button class="btn" style="height:24px;font-size:11px" id="ollamaBtn">Retry</button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="note" id="advice"></div>
+      <div id="drops"></div>
+    </div>
+    <div class="sec" style="border-bottom:0">
+      <div class="eyebrow" style="margin-bottom:9px">Exact count</div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:10px" id="exactHint"></div>
+      <button class="btn" id="exactBtn" style="width:100%">Count exactly</button>
+      <div id="exactOut" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- output -->
+  <div class="hide" id="outputPane" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="bar" style="flex-direction:row;align-items:center;gap:8px">
+      <div class="seg" id="formats">
+        <button class="on" data-fmt="md">Markdown</button>
+        <button data-fmt="xml">XML</button>
+        <button data-fmt="json">JSON</button>
+        <button data-fmt="txt">Plain</button>
+      </div>
+      <span style="flex:1"></span>
+      <span class="m" style="font-size:10.5px;color:var(--tx3)" id="outSize"></span>
+    </div>
+    <div class="bar" style="flex-direction:row;align-items:center;gap:8px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);cursor:pointer">
+        <input type="checkbox" id="splitOn"> Split to fit
+      </label>
+      <div class="fld" style="width:96px;height:24px">
+        <input id="splitBudget" class="m" value="150000" style="font-size:11px">
+      </div>
+      <span style="font-size:11px;color:var(--tx3)">tokens/part</span>
+      <span style="flex:1"></span>
+      <button class="btn" id="partPrev" style="height:24px;padding:0 8px">‹</button>
+      <span class="m" style="font-size:11px;color:var(--tx2)" id="partLabel">—</span>
+      <button class="btn" id="partNext" style="height:24px;padding:0 8px">›</button>
+    </div>
+    <div class="body" style="padding:12px 14px;flex:1">
+      <div class="note hide" id="outNotes" style="margin-bottom:10px"></div>
+      <pre class="code" id="out" style="margin:0"></pre>
+    </div>
+    <div class="ftr">
+      <div style="display:flex;gap:7px">
+        <button class="btn pri" id="copyBtn" style="flex:1">Copy</button>
+        <button class="btn" id="saveBtn" style="height:32px">Save as file</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- readme -->
+  <div class="hide" id="readmePane" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="bar">
+      <div id="readmeStatus" class="note">Ready.</div>
+      <div class="meter hide" id="readmeMeter"><i id="readmeBar" style="width:0%"></i></div>
+      <div id="readmePlan" class="hide"></div>
+      <div id="readmeConfirm" class="hide" style="display:flex;gap:7px">
+        <button class="btn pri" id="readmeStart" style="flex:1">Send and generate</button>
+        <button class="btn" id="readmeCancel">Cancel</button>
+      </div>
+    </div>
+    <div class="body" style="padding:12px 14px;flex:1">
+      <pre class="code" id="readmeOut" style="margin:0"></pre>
+    </div>
+    <div class="ftr">
+      <div style="display:flex;gap:7px">
+        <button class="btn pri" id="readmeCopy" style="flex:1">Copy</button>
+        <button class="btn" id="readmeSave" style="height:32px">Save README.md</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- presets -->
+  <div class="body hide" id="presetsPane">
+    <div class="sec">
+      <div class="eyebrow" style="margin-bottom:10px">Presets for this repository</div>
+      <div id="presetList"></div>
+    </div>
+    <div class="sec" style="border-bottom:0">
+      <div class="eyebrow" style="margin-bottom:10px">Recent</div>
+      <div id="historyList"></div>
+      <div style="font-size:10.5px;color:var(--tx3);margin-top:11px;line-height:1.5">
+        Kept in this browser only, capped at 20. Nothing is uploaded.
+      </div>
+    </div>
+  </div>
+
+  <!-- settings -->
+  <div class="body hide" id="settingsPane">
+    <div class="sec">
+      <div class="eyebrow" style="margin-bottom:9px">Repository access</div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:12px">
+        Both are optional. A token raises the rate limit and unlocks private
+        repositories. Tokens are stored in this browser profile and sent only to
+        the host they belong to.
+      </div>
+      <div id="forgeTokens"></div>
+    </div>
+    <div class="sec">
+      <div class="eyebrow" style="margin-bottom:9px">README generation</div>
+      <div class="note w" style="margin-bottom:11px">
+        <b>Generating a README sends your code to the model provider you choose.</b><br>
+        Everything else in GitScribe stays on your machine; this feature cannot.
+        Ollama is the exception — it runs locally.
+      </div>
+      <div id="modelPickers"></div>
+    </div>
+    <div class="sec">
+      <div class="eyebrow" style="margin-bottom:9px">Model API keys — optional</div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:11px">
+        GitScribe estimates token counts by default. A key lets it ask the vendor
+        for an exact count instead, on demand. Keys are stored in this browser
+        profile and sent only to that vendor.
+      </div>
+      <div id="keyFields"></div>
+    </div>
+    <div class="sec" style="border-bottom:0">
+      <div class="eyebrow" style="margin-bottom:9px">Diagnostics</div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:10px">
+        Checks that the repository download path works from the background worker.
+      </div>
+      <button class="btn" id="diagBtn" style="width:100%">Run diagnostics</button>
+      <div id="diag" style="margin-top:11px"></div>
+    </div>
+  </div>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
