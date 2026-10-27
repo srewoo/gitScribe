@@ -3,6 +3,7 @@ import type { Forge, RepoInfo } from './forge.js';
 import { GitHubError, type RateLimit, type RepoTree, type TreeFile } from './github.js';
 import { readTarGz } from './tar.js';
 import { estimateFromBytes } from './tokens.js';
+import { blobSizes } from './gitlab-sizes.js';
 
 function streamOf(bytes: Uint8Array): ReadableStream<Uint8Array> {
   return new ReadableStream({
@@ -34,6 +35,12 @@ function streamOf(bytes: Uint8Array): ReadableStream<Uint8Array> {
  * Because tree-then-digest would otherwise fetch the same archive twice, a
  * small archive is held in memory between the two passes.
  */
+/**
+ * Requests in flight while listing a tree. A 1,700-file repo needs ~42 calls
+ * (tree pages + size batches); 8 at a time stays far inside 500/minute.
+ */
+const PARALLEL = 8;
+
 export class GitLabClient implements Forge {
   readonly id = 'gitlab' as const;
   readonly label = 'GitLab';
@@ -84,13 +91,24 @@ export class GitLabClient implements Forge {
         res.status === 404
           ? `GitLab project not found, or it is private and needs a token.`
           : res.status === 406
-            ? `GitLab is throttling this download (406). Wait a moment and retry; adding a token raises the limit.`
+            ? `GitLab is throttling archive downloads (406). This budget is separate from the API's, and a token does not lift it.`
             : `GitLab responded ${res.status} for ${path}`,
         res.status,
         this.lastRate,
       );
     }
     return res;
+  }
+
+  /** JSON from an API path, for callers outside this client (e.g. diffs). */
+  async getJson<T>(path: string): Promise<T> {
+    return (await (await this.get(path)).json()) as T;
+  }
+
+  /** One page of a paginated listing, and whether another follows. */
+  async getPage<T>(path: string): Promise<{ body: T; next: boolean }> {
+    const res = await this.get(path);
+    return { body: (await res.json()) as T, next: !!res.headers.get('x-next-page') };
   }
 
   private encoded(project: string): string {
@@ -165,21 +183,63 @@ export class GitLabClient implements Forge {
   /** Paginated tree listing. Carries NO sizes — that is GitLab's shape. */
   private async getTreeViaApi(project: string, ref: string): Promise<RepoTree> {
     const files: TreeFile[] = [];
-    let page = 1;
-    for (; page <= 200; page++) {
+    const MAX_PAGES = 200;
+    const fetchPage = async (page: number): Promise<{ res: Response; batch: Array<{ path?: string; type?: string }> }> => {
       const res = await this.get(
         `/projects/${this.encoded(project)}/repository/tree` +
           `?recursive=true&per_page=100&page=${page}&ref=${encodeURIComponent(ref)}`,
       );
-      const batch = (await res.json()) as Array<{ path?: string; type?: string }>;
+      return { res, batch: (await res.json()) as Array<{ path?: string; type?: string }> };
+    };
+    const add = (batch: Array<{ path?: string; type?: string }>): void => {
       for (const e of batch) {
         if (e.type !== 'blob' || !e.path) continue;
-        // Size genuinely unknown here; 0 keeps the UI honest rather than guessing.
+        // Size unknown here; filled from GraphQL below, or the tree says so.
         files.push({ path: e.path, size: 0, sha: '', tokens: 0 });
       }
-      if (res.headers.get('x-next-page') === '' || batch.length < 100) break;
+    };
+
+    const first = await fetchPage(1);
+    add(first.batch);
+    // GitLab states the page count up front (except on very large listings), so
+    // the rest can load in parallel instead of one after another.
+    const total = Number(first.res.headers.get('x-total-pages') ?? 0);
+    let truncated = false;
+    if (total > 1) {
+      const last = Math.min(total, MAX_PAGES);
+      truncated = total > MAX_PAGES;
+      for (let p = 2; p <= last; p += PARALLEL) {
+        const pages = await Promise.all(
+          Array.from({ length: Math.min(PARALLEL, last - p + 1) }, (_, k) => fetchPage(p + k)),
+        );
+        for (const pg of pages) add(pg.batch);
+      }
+    } else {
+      let page = 1;
+      let res = first.res;
+      let batch = first.batch;
+      while (res.headers.get('x-next-page') && batch.length === 100) {
+        if (++page > MAX_PAGES) { truncated = true; break; }
+        ({ res, batch } = await fetchPage(page));
+        add(batch);
+      }
     }
-    return { ref, files, truncated: page > 200, sizesUnknown: true };
+
+    let note: string | undefined;
+    const sizes = await blobSizes(this.env, {
+      base: this.base, token: this.opts.token, onHeaders: (h) => this.noteRate(h), parallel: PARALLEL,
+    }, project, ref, files.map((f) => f.path)).catch((e: Error) => {
+      note = e.message;
+      return null;
+    });
+    if (!sizes || files.some((f) => !sizes.has(f.path))) {
+      return { ref, files, truncated, sizesUnknown: true, archiveRefused: true, ...(note ? { sizesNote: note } : {}) };
+    }
+    const sized = files.map((f) => {
+      const size = sizes.get(f.path)!;
+      return { ...f, size, tokens: estimateFromBytes(f.path, size) };
+    });
+    return { ref, files: sized, truncated, archiveRefused: true };
   }
 
   /**

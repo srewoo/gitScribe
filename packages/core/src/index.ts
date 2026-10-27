@@ -115,3 +115,36 @@ export {
   type OllamaModel,
   type WindowSource,
 } from './models.js';
+export {
+  buildGraph,
+  groupGraph,
+  isCode,
+  MAX_BOXES,
+  type CodeGraph,
+  type GraphEdge,
+  type Unresolved,
+  type FileOutline,
+  type GraphView,
+  type Box,
+  type Link,
+} from './graph.js';
+export {
+  LABEL_PROMPT,
+  labelRequest,
+  validateLabels,
+  emptyLabels,
+  linkKey,
+  type DiagramLabels,
+  type LabelResult,
+} from './labels.js';
+export { toMermaid } from './mermaid.js';
+export {
+  planTour,
+  PRESETS as TOUR_PRESETS,
+  type Tour,
+  type TourStop,
+  type TourPreset,
+} from './tour.js';
+export { TOUR_PROMPT, tourRequest, validateTour, type TourResult } from './tour-script.js';
+export { safeRelative, isSensitivePath, isImage, pickImages, snapshotExtras } from './snapshot-files.js';
+export { fetchMergeRequest, fetchGitLabCompare } from './diff-gitlab.js';

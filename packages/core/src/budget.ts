@@ -11,7 +11,8 @@
  * never silently replaced with a default.
  */
 
-export type CapacitySource = 'vendor' | 'runtime' | 'user' | 'unknown';
+/** `secondary`: a published but unverified figure, shown to the user as approximate. */
+export type CapacitySource = 'vendor' | 'runtime' | 'user' | 'secondary' | 'unknown';
 
 export interface ModelCapacity {
   /** Total context window in tokens, or null when genuinely unknown. */
@@ -57,7 +58,8 @@ export function planBudget(req: BudgetRequest): Budget {
       needsUserInput: true,
       reason:
         'This model’s context window is unknown, so no request size can be ' +
-        'guaranteed to fit. Set a budget explicitly, or pick a model with a known window.',
+        'guaranteed to fit. Enter its context window under the model picker in Settings, ' +
+        'or pick a model with a known window.',
     };
   }
 
@@ -87,7 +89,7 @@ export function planBudget(req: BudgetRequest): Budget {
     needsUserInput: false,
     reason:
       `${allowance.toLocaleString()} tokens of content per request ` +
-      `(${contextTokens.toLocaleString()} window, source: ${source}; less ` +
+      `(${contextTokens.toLocaleString()} window, source: ${source === 'secondary' ? 'approximate' : source}; less ` +
       `${output.toLocaleString()} output, ${req.systemTokens.toLocaleString()} instructions, ` +
       `${margin.toLocaleString()} margin).`,
   };

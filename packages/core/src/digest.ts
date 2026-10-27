@@ -246,9 +246,12 @@ export async function buildDigest(
   }
 
   out.sort((a, b) => a.path.localeCompare(b.path));
+  // Renderers print `${owner}/${repo}`. A GitLab caller may pass the whole
+  // project path as `repo`, so split at the last slash to avoid "/group/project".
+  const cut = isGitHub ? -1 : project.lastIndexOf('/');
   return {
-    owner,
-    repo,
+    owner: cut < 0 ? owner : project.slice(0, cut),
+    repo: cut < 0 ? repo : project.slice(cut + 1),
     ref: tree.ref,
     files: out,
     totalTokens: total,

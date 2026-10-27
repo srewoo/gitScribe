@@ -41,6 +41,7 @@
       <button class="tab on" data-tab="files">Files</button>
       <button class="tab" data-tab="budget">Budget</button>
       <button class="tab" data-tab="output">Output</button>
+      <button class="tab" data-tab="diagram">Diagram</button>
     </div>
   </div>
 
@@ -104,7 +105,7 @@
   <div class="hide" id="changesPane" style="flex:1;display:flex;flex-direction:column;min-height:0">
     <div class="bar">
       <div class="fld">
-        <input id="diffSpec" placeholder="PR number, PR URL, or v1.0...main">
+        <input id="diffSpec" placeholder="PR/MR number, URL, or v1.0...main">
         <span class="kbd">⌘⇧P</span>
       </div>
       <button class="btn pri" id="diffGo" style="width:100%">Load changes</button>
@@ -126,7 +127,8 @@
   <!-- budget -->
   <div class="body hide" id="budgetPane">
     <div class="sec">
-      <div class="eyebrow" style="margin-bottom:9px">Target model</div>
+      <div class="eyebrow" style="margin-bottom:4px">Where will you paste this?</div>
+      <div style="font-size:11px;color:var(--tx3);line-height:1.5;margin-bottom:9px">For the raw digest: pick the chat you will paste it into to see whether it fits. README generation uses the models in Settings instead.</div>
       <div id="models"></div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
         <span style="font-size:11px;color:var(--tx3);flex:1" id="ollamaMsg">Looking for Ollama…</span>
@@ -178,6 +180,57 @@
       <div style="display:flex;gap:7px">
         <button class="btn pri" id="copyBtn" style="flex:1">Copy</button>
         <button class="btn" id="saveBtn" style="height:32px">Save as file</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- diagram -->
+  <div class="hide" id="diagramPane" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="bar">
+      <div id="diagramStatus" class="note">Draws which file imports which, straight from the code. Free, and nothing leaves your machine.</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn pri" id="diagramBuild" disabled>Build diagram</button>
+        <button class="btn hide" id="diagramLabel" style="height:32px">Label with AI</button>
+        <button class="btn hide" id="diagramFit" style="height:32px">Fit</button>
+        <button class="btn hide" id="diagramVideo" style="height:32px">Make video</button>
+      </div>
+      <div id="videoPanel" class="hide" style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11.5px;align-items:center">
+          <select id="videoPreset" aria-label="Video preset"><option value="onboarding">Onboarding (60–90s)</option><option value="share">Share (20–30s)</option></select>
+          <select id="videoFormat" aria-label="Video format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
+          <select id="videoScript" aria-label="Video script"><option value="code">Script from code</option><option value="ai">Write script with AI</option></select>
+        </div>
+        <div id="videoConfirm" class="hide" style="display:flex;flex-direction:column;gap:7px">
+          <div class="note w" id="videoConfirmText"></div>
+          <div style="display:flex;gap:7px">
+            <button class="btn pri" id="videoSend" style="flex:1">Send and continue</button>
+            <button class="btn" id="videoCancelSend" style="height:32px">Cancel</button>
+          </div>
+        </div>
+        <canvas id="videoPreview" class="hide" style="width:100%;border:1px solid var(--line);border-radius:4px"></canvas>
+        <div class="meter hide" id="videoMeter"><i id="videoBar" style="width:0%"></i></div>
+        <div id="videoStatus" style="font-size:11px;color:var(--tx2);line-height:1.5;white-space:pre-line"></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn" id="videoPlay" style="height:32px;flex:1">Preview</button>
+          <button class="btn pri" id="videoRender" style="flex:1">Render MP4</button>
+          <button class="btn hide" id="videoStop" style="height:32px">Cancel</button>
+        </div>
+      </div>
+      <div id="diagramConfirm" class="hide" style="display:flex;flex-direction:column;gap:7px">
+        <div class="note w" id="diagramConfirmText"></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn pri" id="diagramSend" style="flex:1">Send and label</button>
+          <button class="btn" id="diagramCancel" style="height:32px">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="body" id="diagramCanvas" style="flex:1;min-height:240px;overflow:hidden"></div>
+    <div class="ftr">
+      <div id="diagramReport" style="font-size:11px;color:var(--tx2);line-height:1.5;white-space:pre-line;max-height:110px;overflow:auto;margin-bottom:8px"></div>
+      <div class="hide" id="diagramExport" style="display:flex;gap:7px">
+        <button class="btn" data-export="mermaid" style="flex:1">Copy Mermaid</button>
+        <button class="btn" data-export="svg">SVG</button>
+        <button class="btn" data-export="png">PNG</button>
       </div>
     </div>
   </div>

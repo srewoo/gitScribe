@@ -1,9 +1,9 @@
+import { MODEL_REGISTRY } from './registry.js';
+
 /**
- * Context-window registry.
- *
- * Every entry carries the source of its number. Anything not verified against
- * vendor documentation ships marked as an estimate, and the UI must say so —
- * quoting a wrong window is worse than admitting we do not know it.
+ * Context windows for fit checks — a view of `registry.ts`, the one table of
+ * models. Every entry carries the source of its number; anything not verified
+ * against vendor documentation is marked so the UI can say "approximate".
  */
 export type WindowSource = 'vendor' | 'secondary' | 'runtime';
 
@@ -16,15 +16,15 @@ export interface ModelEntry {
   readonly verifiedOn: string;
 }
 
-export const MODELS: readonly ModelEntry[] = [
-  { id: 'claude-opus-5', name: 'Claude Opus 5', vendor: 'Anthropic', contextWindow: 200_000, windowSource: 'vendor', verifiedOn: '2026-09-16' },
-  { id: 'claude-opus-5[1m]', name: 'Claude Opus 5 (1M)', vendor: 'Anthropic', contextWindow: 1_000_000, windowSource: 'vendor', verifiedOn: '2026-09-16' },
-  { id: 'claude-sonnet-5', name: 'Claude Sonnet 5', vendor: 'Anthropic', contextWindow: 1_000_000, windowSource: 'vendor', verifiedOn: '2026-09-16' },
-  { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', vendor: 'Anthropic', contextWindow: 200_000, windowSource: 'vendor', verifiedOn: '2026-09-16' },
-  { id: 'gpt-5.1', name: 'GPT-5.1', vendor: 'OpenAI', contextWindow: 400_000, windowSource: 'secondary', verifiedOn: '2026-09-16' },
-  { id: 'gemini-3-pro', name: 'Gemini 3 Pro', vendor: 'Google', contextWindow: 1_048_576, windowSource: 'secondary', verifiedOn: '2026-09-16' },
-  { id: 'grok-4', name: 'Grok 4', vendor: 'xAI', contextWindow: 256_000, windowSource: 'secondary', verifiedOn: '2026-09-16' },
-];
+const VENDOR = { anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', xai: 'xAI', ollama: 'Ollama' } as const;
+
+/** Models with a known window. Unknown ones are left out rather than guessed. */
+export const MODELS: readonly ModelEntry[] = MODEL_REGISTRY.flatMap((r) =>
+  r.contextTokens === null ? [] : [{
+    id: r.id, name: r.name, vendor: VENDOR[r.provider], contextWindow: r.contextTokens,
+    windowSource: r.provenance === 'vendor-docs' ? 'vendor' : r.provenance === 'runtime' ? 'runtime' : 'secondary',
+    verifiedOn: r.verifiedOn,
+  }]);
 
 /** Held back for the user's prompt and the model's reply. */
 export const DEFAULT_RESERVE = 8_000;

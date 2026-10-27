@@ -48,17 +48,17 @@ export const REDUCE_MAX_OUTPUT = 16_000;
 export function resolveBudgets(
   mapChoice: ModelChoice,
   reduceChoice: ModelChoice,
-  ollamaWindow?: number,
+  ollamaWindows?: Readonly<Record<string, number>>,
 ): { map: ReturnType<typeof planBudget>; reduce: ReturnType<typeof planBudget> } {
   return {
     map: planBudget({
-      capacity: capacityFor(mapChoice, ollamaWindow),
+      capacity: capacityFor(mapChoice, ollamaWindows),
       requestedOutput: MAP_MAX_OUTPUT,
       systemTokens: estimateFromText('p.md', ANALYSIS_PROMPT),
       overheadTokens: 800,
     }),
     reduce: planBudget({
-      capacity: capacityFor(reduceChoice, ollamaWindow),
+      capacity: capacityFor(reduceChoice, ollamaWindows),
       requestedOutput: REDUCE_MAX_OUTPUT,
       systemTokens: estimateFromText('p.md', SYNTHESIS_PROMPT),
       overheadTokens: 800,

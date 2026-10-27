@@ -39,6 +39,13 @@ export interface RepoTree {
    * size, so this is true when the archive path was unavailable.
    */
   readonly sizesUnknown?: boolean;
+  /**
+   * Set when the host refused the archive while listing (GitLab 406), so
+   * fetching content will cost one request per file rather than one download.
+   */
+  readonly archiveRefused?: boolean;
+  /** Why sizes are unknown, when there is something the user can do about it. */
+  readonly sizesNote?: string;
 }
 
 export class GitHubError extends Error {

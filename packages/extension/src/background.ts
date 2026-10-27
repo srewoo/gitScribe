@@ -34,6 +34,11 @@ import {
   type RepoTree,
   type Selection,
   type Forge,
+  buildGraph,
+  LABEL_PROMPT,
+  TOUR_PROMPT,
+  fetchMergeRequest,
+  fetchGitLabCompare,
 } from '@gitscribe/core';
 
 import { countExact, providerOf, CountUnsupportedError } from './counters.js';
@@ -45,7 +50,7 @@ import {
   SCHEMA_VERSION, type JobCheckpoint,
 } from './store.js';
 import { generateReadme, planReadme, resolveBudgets, MAP_MAX_OUTPUT, REDUCE_MAX_OUTPUT } from './readme.js';
-import { estimateCostUsd, type ModelChoice } from './llm.js';
+import { complete, estimateCostUsd, type ModelChoice } from './llm.js';
 
 const env = { fetch: globalThis.fetch.bind(globalThis), now: () => Date.now() };
 
@@ -168,7 +173,7 @@ type Msg =
   | { kind: 'rate' }
   | { kind: 'diagnose' }
   | { kind: 'countExact'; digestId: string; modelId: string }
-  | { kind: 'planReadme'; digestId: string; map: ModelChoice; reduce: ModelChoice; ollamaWindow?: number }
+  | { kind: 'planReadme'; digestId: string; map: ModelChoice; reduce: ModelChoice; ollamaWindows?: Record<string, number> }
   | { kind: 'startReadme'; digestId: string; map: ModelChoice; reduce: ModelChoice; chunkBudget: number; reduceAllowance: number; planHash: string }
   | { kind: 'readmeStatus'; jobId: string }
   | { kind: 'cancelReadme'; jobId: string }
@@ -180,7 +185,9 @@ type Msg =
   | { kind: 'storageInfo' }
   | { kind: 'clearStorage' }
   | { kind: 'listJobs' }
-  | { kind: 'diff'; forge: ForgeId; project: string; spec: string; format?: Format };
+  | { kind: 'diff'; forge: ForgeId; project: string; spec: string; format?: Format }
+  | { kind: 'graph'; digestId: string }
+  | { kind: 'labelDiagram'; choice: ModelChoice; request: string; purpose?: 'tour' };
 
 async function identityFor(forge: ForgeId, project: string): Promise<RepoIdentity> {
   const tokens = await loadTokens();
@@ -466,12 +473,14 @@ async function handle(msg: Msg): Promise<unknown> {
      */
     case 'planReadme': {
       const entry = requireDigest(msg.digestId);
-      const budgets = resolveBudgets(msg.map, msg.reduce, msg.ollamaWindow);
+      const budgets = resolveBudgets(msg.map, msg.reduce, msg.ollamaWindows);
 
       if (budgets.map.inputAllowance === null || budgets.reduce.inputAllowance === null) {
         return {
           ok: true,
           blocked: true,
+          mapBlocked: budgets.map.inputAllowance === null,
+          reduceBlocked: budgets.reduce.inputAllowance === null,
           mapReason: budgets.map.reason,
           reduceReason: budgets.reduce.reason,
         };
@@ -565,6 +574,23 @@ async function handle(msg: Msg): Promise<unknown> {
       });
 
       return { started: true, jobId };
+    }
+
+    // The import graph for a built digest. Plain data; grouping happens in the panel.
+    case 'graph':
+      return { graph: buildGraph(requireDigest(msg.digestId).digest) };
+
+    /**
+     * One labelling call. The panel has already shown the user what is sent:
+     * the outline only, never file bodies. The reply is validated in the panel
+     * against the graph, so nothing the model invents reaches the diagram.
+     */
+    case 'labelDiagram': {
+      const { keys } = await chrome.storage.local.get('keys');
+      const apiKey = msg.choice.provider === 'ollama' ? '' : (keys as Record<string, string> | undefined)?.[msg.choice.provider];
+      if (apiKey === undefined) throw new Error(`No ${msg.choice.provider} API key saved. Add one in settings.`);
+      const res = await complete({ choice: msg.choice, apiKey, system: msg.purpose === 'tour' ? TOUR_PROMPT : LABEL_PROMPT, user: msg.request, maxTokens: 4000 });
+      return { raw: res.text };
     }
 
     case 'render': {
@@ -666,17 +692,14 @@ async function handle(msg: Msg): Promise<unknown> {
 
     /** IMP-11: changes mode. GitHub only for now, and it says so. */
     case 'diff': {
-      if (!(c instanceof GitHubClient)) {
-        throw new Error(
-          'Change digests are GitHub-only at the moment. GitLab merge requests need their own adapter, which is not built yet.',
-        );
-      }
-      const [owner, repo] = split(msg.project);
       const parsed = parseChangeSpec(msg.spec);
-      const d =
-        parsed.kind === 'pr'
-          ? await fetchPullRequest(env, c, owner, repo, parsed.number)
-          : await fetchCompare(env, c, owner, repo, parsed.base, parsed.head);
+      const d = c instanceof GitHubClient
+        ? parsed.kind === 'pr'
+          ? await fetchPullRequest(env, c, ...split(msg.project), parsed.number)
+          : await fetchCompare(env, c, ...split(msg.project), parsed.base, parsed.head)
+        : parsed.kind === 'pr'
+          ? await fetchMergeRequest(env, c, msg.project, parsed.number)
+          : await fetchGitLabCompare(env, c, msg.project, parsed.base, parsed.head);
 
       return {
         kind: d.kind,

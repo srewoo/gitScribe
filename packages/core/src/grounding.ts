@@ -99,7 +99,8 @@ export function groundingNotice(report: GroundingReport, filesRead?: number): st
     `\n\n## Unverified references\n\n` +
     `The following paths appear in this document but were **not** among ` +
     `${scope}. ` +
-    `They are most likely invented by the model — treat them as wrong until checked:\n\n` +
+    `Treat each as wrong until checked: usually the model invented it, though some ` +
+    `are named only as files that are ignored or absent (such as a lockfile):\n\n` +
     report.unverified.map((p) => `- \`${p}\``).join('\n') +
     `\n\nA smaller or local model fabricates more often. If this list is long, ` +
     `regenerate with a stronger analysis model.\n`

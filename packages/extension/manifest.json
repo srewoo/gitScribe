@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
   "name": "GitScribe",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Turn a GitHub or GitLab repository into an LLM-ready digest, or have a model write a README that maps the whole codebase.",
   "minimum_chrome_version": "116",
   "permissions": [
     "storage",
-    "sidePanel",
-    "tabs"
+    "sidePanel"
   ],
   "host_permissions": [
+    "https://github.com/*",
     "https://api.github.com/*",
     "https://codeload.github.com/*",
     "https://gitlab.com/*"
