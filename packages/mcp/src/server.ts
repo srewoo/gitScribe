@@ -8,6 +8,7 @@
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { createRequire } from 'node:module';
 import { z } from 'zod';
 
 import { writeSnapshot } from './snapshot.js';
@@ -112,7 +113,9 @@ function rateNote(r: Pick<Repo, 'forge' | 'client'> = { forge: 'github', client 
   }`;
 }
 
-const server = new McpServer({ name: 'gitscribe', version: '0.1.0' });
+// Reported to MCP clients; read from package.json so it cannot drift from the published version.
+const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+const server = new McpServer({ name: 'gitscribe', version });
 
 /* ---------------------------------------------------------------- tools */
 
