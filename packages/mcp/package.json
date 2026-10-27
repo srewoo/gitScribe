@@ -1,6 +1,6 @@
 {
   "name": "@gitscribe/mcp",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
   "bin": {
     "gitscribe-mcp": "dist/server.js"
@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@gitscribe/core": "^0.1.0",
+    "@gitscribe/core": "^0.3.0",
     "@modelcontextprotocol/sdk": "^1.32.0",
     "zod": "^4.6.6"
   },
