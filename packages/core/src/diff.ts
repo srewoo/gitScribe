@@ -119,7 +119,7 @@ export async function fetchPullRequest(
     });
   }
 
-  return assemble(env, owner, repo, 'pr', {
+  return assembleDiff(env, owner, repo, 'pr', {
     base: meta.base?.ref ?? 'base',
     head: meta.head?.ref ?? 'head',
     title: meta.title ?? `Pull request #${number}`,
@@ -162,7 +162,7 @@ export async function fetchCompare(
     });
   }
 
-  return assemble(env, owner, repo, 'compare', {
+  return assembleDiff(env, owner, repo, 'compare', {
     base,
     head,
     title: `${base}...${head}${cmp.total_commits ? ` (${cmp.total_commits} commits)` : ''}`,
@@ -172,7 +172,7 @@ export async function fetchCompare(
   });
 }
 
-function assemble(
+export function assembleDiff(
   env: Env,
   owner: string,
   repo: string,
@@ -213,7 +213,7 @@ function assemble(
   if (noPatch.length) {
     truncations.push({
       kind: 'binary',
-      detail: `${noPatch.length} file(s) have no rendered diff (binary, or too large for GitHub to render).`,
+      detail: `${noPatch.length} file(s) have no rendered diff (binary, or too large for the host to render).`,
       paths: noPatch,
     });
   }
@@ -240,8 +240,10 @@ function assemble(
 export function parseChangeSpec(
   spec: string,
 ): { kind: 'pr'; number: number } | { kind: 'compare'; base: string; head: string } {
-  const prUrl = /\/pull\/(\d+)/.exec(spec);
+  const prUrl = /\/(?:pull|merge_requests)\/(\d+)/.exec(spec);
   if (prUrl) return { kind: 'pr', number: Number(prUrl[1]) };
+  const bang = /^!(\d+)$/.exec(spec.trim());   // GitLab's own shorthand
+  if (bang) return { kind: 'pr', number: Number(bang[1]) };
   const hash = /#(\d+)\s*$/.exec(spec);
   if (hash) return { kind: 'pr', number: Number(hash[1]) };
   if (/^\d+$/.test(spec.trim())) return { kind: 'pr', number: Number(spec.trim()) };
@@ -251,7 +253,7 @@ export function parseChangeSpec(
 
   throw new GitHubError(
     `Could not read a pull request or commit range from ${JSON.stringify(spec)}. ` +
-      `Try "1234", a pull request URL, or "v1.0...main".`,
+      `Try "1234", "!1234", a pull or merge request URL, or "v1.0...main".`,
     400,
     null,
   );

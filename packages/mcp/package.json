@@ -3,14 +3,21 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "gitscribe-mcp": "./dist/server.js"
+    "gitscribe-mcp": "dist/server.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@gitscribe/core": "*",
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^4.6.5"
-  }
+    "@gitscribe/core": "^0.1.0",
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "zod": "^4.6.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT"
 }

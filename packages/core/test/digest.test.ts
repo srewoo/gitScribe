@@ -332,6 +332,9 @@ test('digest: a 406 on the archive falls back to per-file reads', async () => {
   // The fallback is disclosed, not silent — it costs a request per file.
   const note = d.truncations.find((t) => /read individually/.test(t.detail));
   assert.ok(note, 'the fallback must be reported in the digest');
+
+  // The whole project path arrives as `repo`; the header must not read "/group/proj".
+  assert.equal(`${d.owner}/${d.repo}`, 'group/proj');
 });
 
 test('digest: a non-406 archive failure still propagates', async () => {

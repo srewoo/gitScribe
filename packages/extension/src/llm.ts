@@ -9,11 +9,15 @@
  * bundling three more SDKs into a service worker is not worth it.
  */
 
+import { lookupModel, modelsFor, estimateFromText } from '@gitscribe/core';
+
 export type ProviderId = 'anthropic' | 'openai' | 'google' | 'xai' | 'ollama';
 
 export interface ModelChoice {
   readonly provider: ProviderId;
   readonly model: string;
+  /** Context window the user entered for a model we have no verified figure for. */
+  readonly contextWindow?: number;
 }
 
 export interface Completion {
@@ -31,13 +35,6 @@ export interface CompleteArgs {
   readonly signal?: AbortSignal;
 }
 
-/** Known context/output limits per model. Absent means genuinely unknown. */
-export const CAPACITY: Readonly<Record<string, { context: number; maxOutput: number }>> = {
-  'claude-opus-5': { context: 200_000, maxOutput: 64_000 },
-  'claude-sonnet-5': { context: 1_000_000, maxOutput: 64_000 },
-  'claude-haiku-4-5': { context: 200_000, maxOutput: 64_000 },
-};
-
 export interface ProviderInfo {
   readonly id: ProviderId;
   readonly label: string;
@@ -45,9 +42,11 @@ export interface ProviderInfo {
   readonly keyHint: string;
   /** Suggested models. The user may type any model id instead. */
   readonly models: readonly string[];
-  /** USD per million tokens, when published and verified. */
-  readonly pricing?: Readonly<Record<string, { in: number; out: number }>>;
 }
+
+/** Registry models first (known windows), then other common ids to type less. */
+const suggest = (id: ProviderId, extra: readonly string[] = []): string[] =>
+  [...modelsFor(id).map((m) => m.id), ...extra];
 
 export const PROVIDERS: readonly ProviderInfo[] = [
   {
@@ -55,34 +54,28 @@ export const PROVIDERS: readonly ProviderInfo[] = [
     label: 'Anthropic',
     needsKey: true,
     keyHint: 'sk-ant-…',
-    models: ['claude-opus-5', 'claude-sonnet-5', 'claude-haiku-4-5'],
-    // Verified against Anthropic's published rates.
-    pricing: {
-      'claude-opus-5': { in: 5, out: 25 },
-      'claude-sonnet-5': { in: 2, out: 10 },
-      'claude-haiku-4-5': { in: 1, out: 5 },
-    },
+    models: suggest('anthropic'),
   },
   {
     id: 'openai',
     label: 'OpenAI',
     needsKey: true,
     keyHint: 'sk-…',
-    models: ['gpt-5.1', 'gpt-5-mini', 'gpt-4.1-mini'],
+    models: suggest('openai', ['gpt-5-mini', 'gpt-4.1-mini']),
   },
   {
     id: 'google',
     label: 'Google',
     needsKey: true,
     keyHint: 'AIza…',
-    models: ['gemini-3-pro', 'gemini-2.5-flash'],
+    models: suggest('google', ['gemini-2.5-flash']),
   },
   {
     id: 'xai',
     label: 'xAI',
     needsKey: true,
     keyHint: 'xai-…',
-    models: ['grok-4', 'grok-3-mini'],
+    models: suggest('xai', ['grok-3-mini']),
   },
   {
     id: 'ollama',
@@ -95,22 +88,33 @@ export const PROVIDERS: readonly ProviderInfo[] = [
 
 /**
  * Capacity for a chosen model. Ollama reports its own window at runtime, which
- * the caller supplies; everything else comes from the table, and anything
- * missing is reported as unknown rather than guessed.
+ * the caller supplies; everything else comes from the model registry in core,
+ * and anything missing is reported as unknown rather than guessed.
  */
 export function capacityFor(
   choice: ModelChoice,
-  ollamaWindow?: number,
-): { contextTokens: number | null; maxOutputTokens: number | null; source: 'vendor' | 'runtime' | 'unknown' } {
-  if (choice.provider === 'ollama') {
-    return ollamaWindow !== undefined
-      ? { contextTokens: ollamaWindow, maxOutputTokens: null, source: 'runtime' }
-      : { contextTokens: null, maxOutputTokens: null, source: 'unknown' };
+  ollamaWindows?: Readonly<Record<string, number>>,
+): { contextTokens: number | null; maxOutputTokens: number | null; source: 'vendor' | 'runtime' | 'user' | 'secondary' | 'unknown' } {
+  const local = choice.provider === 'ollama' ? ollamaWindows?.[choice.model] : undefined;
+  if (local !== undefined) return { contextTokens: local, maxOutputTokens: null, source: 'runtime' };
+  const r = choice.provider === 'ollama' ? null : registered(choice);
+  if (r?.contextTokens && r.provenance === 'vendor-docs') {
+    return { contextTokens: r.contextTokens, maxOutputTokens: r.maxOutputTokens, source: 'vendor' };
   }
-  const known = CAPACITY[choice.model];
-  return known
-    ? { contextTokens: known.context, maxOutputTokens: known.maxOutput, source: 'vendor' }
-    : { contextTokens: null, maxOutputTokens: null, source: 'unknown' };
+  // Measured or documented figures win; the user's number is the fallback.
+  if (choice.contextWindow && choice.contextWindow > 0) {
+    return { contextTokens: choice.contextWindow, maxOutputTokens: null, source: 'user' };
+  }
+  // An approximate published figure — the same one the Budget tab shows. The
+  // budget's uncertainty margin still applies.
+  if (r?.contextTokens) return { contextTokens: r.contextTokens, maxOutputTokens: r.maxOutputTokens, source: 'secondary' };
+  return { contextTokens: null, maxOutputTokens: null, source: 'unknown' };
+}
+
+/** The registry entry for a choice, only if it belongs to the chosen provider. */
+function registered(choice: ModelChoice): ReturnType<typeof lookupModel> {
+  const r = lookupModel(choice.model);
+  return r && r.provider === choice.provider ? r : null;
 }
 
 export function providerInfo(id: ProviderId): ProviderInfo {
@@ -118,8 +122,8 @@ export function providerInfo(id: ProviderId): ProviderInfo {
 }
 
 /**
- * Rough cost for a planned run. Only Anthropic rates are published here and
- * verified; anything else returns null rather than a number invented for the
+ * Rough cost for a planned run, from the registry's verified rates only;
+ * anything without one returns null rather than a number invented for the
  * sake of showing one.
  */
 export function estimateCostUsd(
@@ -127,9 +131,10 @@ export function estimateCostUsd(
   inputTokens: number,
   outputTokens: number,
 ): number | null {
-  const price = providerInfo(choice.provider).pricing?.[choice.model];
-  if (!price) return null;
-  return (inputTokens / 1e6) * price.in + (outputTokens / 1e6) * price.out;
+  if (choice.provider === 'ollama') return 0;   // runs locally: no charge
+  const r = registered(choice);
+  if (r?.pricePerMTokIn === undefined || r.pricePerMTokOut === undefined) return null;
+  return (inputTokens / 1e6) * r.pricePerMTokIn + (outputTokens / 1e6) * r.pricePerMTokOut;
 }
 
 /* ------------------------------------------------------------- providers */
@@ -210,7 +215,19 @@ async function completeGoogle(a: CompleteArgs): Promise<Completion> {
   };
 }
 
+/**
+ * Context to ask Ollama for. Without `num_ctx` Ollama uses its small default
+ * and silently drops most of a long prompt (measured: 10,781 tokens of code
+ * sent, 5,222 read). Sized to the request rather than the model's maximum,
+ * so a short call does not reserve memory for 32k tokens.
+ */
+export function ollamaContext(system: string, user: string, maxTokens: number): number {
+  const prompt = estimateFromText('p.md', system) + estimateFromText('p.md', user);
+  return Math.ceil(((prompt + maxTokens) * 1.1) / 1024) * 1024;
+}
+
 async function completeOllama(a: CompleteArgs): Promise<Completion> {
+  const numCtx = ollamaContext(a.system, a.user, a.maxTokens);
   const res = await fetch('http://127.0.0.1:11434/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -221,7 +238,7 @@ async function completeOllama(a: CompleteArgs): Promise<Completion> {
         { role: 'system', content: a.system },
         { role: 'user', content: a.user },
       ],
-      options: { num_predict: a.maxTokens },
+      options: { num_predict: a.maxTokens, num_ctx: numCtx },
     }),
     ...(a.signal ? { signal: a.signal } : {}),
   });
@@ -231,6 +248,9 @@ async function completeOllama(a: CompleteArgs): Promise<Completion> {
     prompt_eval_count?: number;
     eval_count?: number;
   };
+  // No "too few tokens read" check: Ollama reuses its cache for a repeated prompt
+  // prefix and counts only the new tokens, so a short count is not a cut prompt
+  // (measured: a false alarm at 674 of ~1,687). Setting num_ctx is the fix.
   return {
     text: body.message?.content ?? '',
     ...(body.prompt_eval_count !== undefined ? { inputTokens: body.prompt_eval_count } : {}),

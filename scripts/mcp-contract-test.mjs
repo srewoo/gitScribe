@@ -18,6 +18,8 @@ const EXPECTED = {
   gitscribe_readme_guide: ['repo'],
   gitscribe_readme_chunk: ['repo', 'part'],
   gitscribe_verify_readme: ['repo', 'markdown'],
+  gitscribe_diagram: ['repo'],
+  gitscribe_snapshot: ['repo'],
   gitscribe_models: [],
 };
 
@@ -70,6 +72,18 @@ const bad = await client
   .catch(() => ({ rejected: true, detail: 'threw' }));
 assert.ok(bad.rejected, `a malformed repo must be rejected, got: ${JSON.stringify(bad.detail).slice(0, 160)}`);
 console.log('ok    malformed repo rejected');
+
+const { prompts } = await client.listPrompts();
+const promo = prompts.find((p) => p.name === 'promo');
+if (!promo || !promo.arguments?.some((a) => a.name === 'repo' && a.required)) {
+  console.error('FAIL  promo prompt missing or does not require repo');
+  failures++;
+} else {
+  const msg = await client.getPrompt({ name: 'promo', arguments: { repo: 'srewoo/paintBrush' } });
+  assert.match(msg.messages[0].content.text, /gitscribe_snapshot[\s\S]*\/brag/);
+  assert.match(msg.messages[0].content.text, /If no \/brag skill is available/, 'promo explains what to do without brag');
+  console.log('ok    promo prompt');
+}
 
 await client.close();
 

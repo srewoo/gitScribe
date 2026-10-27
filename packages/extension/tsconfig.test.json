@@ -11,6 +11,10 @@
   },
   "include": [
     "src/vwindow.ts",
+    "src/llm.ts",
+    "src/diagram-layout.ts",
+    "src/video-timeline.ts",
+    "src/busy.ts",
     "test/**/*.ts"
   ]
 }

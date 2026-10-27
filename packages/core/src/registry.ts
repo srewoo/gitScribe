@@ -45,6 +45,13 @@ export const MODEL_REGISTRY: readonly ModelEntry[] = [
     verifiedOn: CHECKED, endpoint: 'anthropic-messages',
   },
   {
+    id: 'claude-opus-5[1m]', provider: 'anthropic', name: 'Claude Opus 5 (1M)',
+    contextTokens: 1_000_000, maxOutputTokens: 64_000,
+    pricePerMTokIn: 5, pricePerMTokOut: 25,
+    provenance: 'vendor-docs', sourceUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
+    verifiedOn: CHECKED, endpoint: 'anthropic-messages',
+  },
+  {
     id: 'claude-sonnet-5', provider: 'anthropic', name: 'Claude Sonnet 5',
     contextTokens: 1_000_000, maxOutputTokens: 64_000,
     pricePerMTokIn: 2, pricePerMTokOut: 10,
@@ -58,22 +65,23 @@ export const MODEL_REGISTRY: readonly ModelEntry[] = [
     provenance: 'vendor-docs', sourceUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
     verifiedOn: CHECKED, endpoint: 'anthropic-messages',
   },
-  // Deliberately null: these were only ever sourced from secondary write-ups,
-  // so claiming a window would be inventing one. The UI must say unknown.
+  // Secondary: published figures not yet checked against the vendor's own
+  // docs. Shown as "approximate" everywhere, and budgets keep their margin.
+  // No price: an unverified rate would make a cost estimate look authoritative.
   {
     id: 'gpt-5.1', provider: 'openai', name: 'GPT-5.1',
-    contextTokens: null, maxOutputTokens: null,
-    provenance: 'unverified', verifiedOn: CHECKED, endpoint: 'openai-chat',
+    contextTokens: 400_000, maxOutputTokens: null,
+    provenance: 'secondary', verifiedOn: CHECKED, endpoint: 'openai-chat',
   },
   {
     id: 'gemini-3-pro', provider: 'google', name: 'Gemini 3 Pro',
-    contextTokens: null, maxOutputTokens: null,
-    provenance: 'unverified', verifiedOn: CHECKED, endpoint: 'google-generate',
+    contextTokens: 1_048_576, maxOutputTokens: null,
+    provenance: 'secondary', verifiedOn: CHECKED, endpoint: 'google-generate',
   },
   {
     id: 'grok-4', provider: 'xai', name: 'Grok 4',
-    contextTokens: null, maxOutputTokens: null,
-    provenance: 'unverified', verifiedOn: CHECKED, endpoint: 'openai-chat',
+    contextTokens: 256_000, maxOutputTokens: null,
+    provenance: 'secondary', verifiedOn: CHECKED, endpoint: 'openai-chat',
   },
 ];
 
